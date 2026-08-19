@@ -17,7 +17,7 @@
           <span>Email</span>
           <input type="email" formControlName="email" autocomplete="email" placeholder="you@example.com" />
           @if (loginForm.controls.email.touched && loginForm.controls.email.invalid) {
-            <small>Enter a valid email.</small>
+            <small>{{ loginEmailError() }}</small>
           }
         </label>
 
@@ -25,7 +25,7 @@
           <span>Password</span>
           <input type="password" formControlName="password" autocomplete="current-password" placeholder="Enter your password" />
           @if (loginForm.controls.password.touched && loginForm.controls.password.invalid) {
-            <small>Password is required.</small>
+            <small>{{ loginPasswordError() }}</small>
           }
         </label>
 
@@ -35,9 +35,9 @@
       <form [formGroup]="registerForm" (ngSubmit)="register()" class="stack">
         <label>
           <span>Username</span>
-          <input type="text" formControlName="username" autocomplete="name" placeholder="Akash Chaudhary" />
+          <input type="text" formControlName="username" autocomplete="name" placeholder="Akash Chaudhary" maxlength="60" />
           @if (registerForm.controls.username.touched && registerForm.controls.username.invalid) {
-            <small>Username must be at least 3 characters.</small>
+            <small>{{ registerUsernameError() }}</small>
           }
         </label>
 
@@ -45,7 +45,7 @@
           <span>Email</span>
           <input type="email" formControlName="email" autocomplete="email" placeholder="you@example.com" />
           @if (registerForm.controls.email.touched && registerForm.controls.email.invalid) {
-            <small>Enter a valid email.</small>
+            <small>{{ registerEmailError() }}</small>
           }
         </label>
 
@@ -53,7 +53,7 @@
           <span>Password</span>
           <input type="password" formControlName="password" autocomplete="new-password" placeholder="Minimum 6 characters" />
           @if (registerForm.controls.password.touched && registerForm.controls.password.invalid) {
-            <small>Password must be at least 6 characters.</small>
+            <small>{{ registerPasswordError() }}</small>
           }
         </label>
 

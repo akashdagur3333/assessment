@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const Task = require('../models/Task');
+const { STATUSES } = Task;
 const { authenticate } = require('../middleware/auth');
 const { emitTaskChanged } = require('../realtime');
 
@@ -81,6 +82,67 @@ async function findVisibleTask(user, taskId) {
   return Task.findOne({ _id: taskId, ...scope });
 }
 
+function validateTaskPayload(payload, { partial = false } = {}) {
+  const details = {};
+  const sanitized = {};
+
+  if (!partial || Object.prototype.hasOwnProperty.call(payload, 'title')) {
+    const title = String(payload.title || '').trim();
+
+    if (!title) {
+      details.title = 'Title is required';
+    } else if (title.length < 3) {
+      details.title = 'Title must be at least 3 characters';
+    } else if (title.length > 120) {
+      details.title = 'Title cannot exceed 120 characters';
+    } else {
+      sanitized.title = title;
+    }
+  }
+
+  if (!partial || Object.prototype.hasOwnProperty.call(payload, 'description')) {
+    const description = String(payload.description || '').trim();
+
+    if (description.length > 1000) {
+      details.description = 'Description cannot exceed 1000 characters';
+    } else {
+      sanitized.description = description;
+    }
+  }
+
+  if (!partial || Object.prototype.hasOwnProperty.call(payload, 'status')) {
+    const status = payload.status || 'pending';
+
+    if (!STATUSES.includes(status)) {
+      details.status = 'Status must be pending or completed';
+    } else {
+      sanitized.status = status;
+    }
+  }
+
+  if (Object.keys(details).length) {
+    return { details };
+  }
+
+  return { sanitized };
+}
+
+function validateAssignee(assignedTo) {
+  if (!assignedTo || !mongoose.Types.ObjectId.isValid(assignedTo)) {
+    return { assignedTo: 'Select a valid assignee' };
+  }
+
+  return null;
+}
+
+function validationFailed(res, details) {
+  return res.status(400).json({
+    success: false,
+    message: 'Validation failed',
+    details
+  });
+}
+
 router.get('/', async (req, res, next) => {
   try {
     const { page, limit, skip } = getPagination(req.query);
@@ -135,11 +197,22 @@ router.get('/stats', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    const { title, description = '', status = 'pending' } = req.body;
+    const { sanitized, details } = validateTaskPayload(req.body);
+
+    if (details) {
+      return validationFailed(res, details);
+    }
+
     let assignedTo = req.body.assignedTo || req.user._id;
 
     if (req.user.role === 'Employee') {
       assignedTo = req.user._id;
+    }
+
+    const assigneeDetails = validateAssignee(assignedTo);
+
+    if (assigneeDetails) {
+      return validationFailed(res, assigneeDetails);
     }
 
     if (!(await canAssignTo(req.user, assignedTo))) {
@@ -147,9 +220,9 @@ router.post('/', async (req, res, next) => {
     }
 
     const task = await Task.create({
-      title,
-      description,
-      status,
+      title: sanitized.title,
+      description: sanitized.description,
+      status: sanitized.status,
       createdBy: req.user._id,
       assignedTo
     });
@@ -170,16 +243,21 @@ router.patch('/:id', async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Task not found' });
     }
 
-    const updates = {};
-    ['title', 'description', 'status'].forEach((field) => {
-      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
-        updates[field] = req.body[field];
-      }
-    });
+    const { sanitized: updates, details } = validateTaskPayload(req.body, { partial: true });
+
+    if (details) {
+      return validationFailed(res, details);
+    }
 
     if (Object.prototype.hasOwnProperty.call(req.body, 'assignedTo')) {
       if (req.user.role === 'Employee') {
         return res.status(403).json({ success: false, message: 'Employees cannot reassign tasks' });
+      }
+
+      const assigneeDetails = validateAssignee(req.body.assignedTo);
+
+      if (assigneeDetails) {
+        return validationFailed(res, assigneeDetails);
       }
 
       if (!(await canAssignTo(req.user, req.body.assignedTo))) {

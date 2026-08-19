@@ -1,6 +1,10 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { CreateTaskPayload, Task, TaskStatus, User } from '../../models/api.models';
+
+function notBlank(control: AbstractControl<string>): ValidationErrors | null {
+  return control.value.trim() ? null : { blank: true };
+}
 
 @Component({
   selector: 'app-task-form',
@@ -25,7 +29,7 @@ export class TaskFormComponent implements OnChanges {
   selectedAssignee: User | null = null;
 
   readonly form = this.fb.nonNullable.group({
-    title: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(120)]],
+    title: ['', [Validators.required, notBlank, Validators.minLength(3), Validators.maxLength(120)]],
     description: ['', [Validators.maxLength(1000)]],
     status: ['pending' as TaskStatus, [Validators.required]],
     assignedTo: ['']
@@ -48,6 +52,13 @@ export class TaskFormComponent implements OnChanges {
   }
 
   submit(): void {
+    this.form.controls.title.setValue(this.form.controls.title.value.trim());
+    this.form.controls.description.setValue(this.form.controls.description.value.trim());
+
+    if (this.canReassignTasks && !this.form.controls.assignedTo.value) {
+      this.form.controls.assignedTo.setErrors({ required: true });
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -60,6 +71,34 @@ export class TaskFormComponent implements OnChanges {
       status: value.status,
       assignedTo: this.canReassignTasks ? value.assignedTo : this.currentUser._id
     });
+  }
+
+  titleError(): string {
+    const control = this.form.controls.title;
+
+    if (control.hasError('required') || control.hasError('blank')) {
+      return 'Title is required.';
+    }
+
+    if (control.hasError('minlength')) {
+      return 'Title must be at least 3 characters.';
+    }
+
+    if (control.hasError('maxlength')) {
+      return 'Title cannot exceed 120 characters.';
+    }
+
+    return '';
+  }
+
+  descriptionError(): string {
+    return this.form.controls.description.hasError('maxlength')
+      ? 'Description cannot exceed 1000 characters.'
+      : '';
+  }
+
+  assigneeError(): string {
+    return this.form.controls.assignedTo.hasError('required') ? 'Select an assignee.' : '';
   }
 
   cancel(): void {
@@ -77,6 +116,7 @@ export class TaskFormComponent implements OnChanges {
 
   selectAssignee(userId: string): void {
     this.form.controls.assignedTo.setValue(userId);
+    this.form.controls.assignedTo.setErrors(null);
     this.selectedAssignee = this.getAssigneeOptions().find((user) => user._id === userId) || null;
     this.openAssigneeDropdown = false;
   }

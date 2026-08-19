@@ -1,17 +1,22 @@
 <form [formGroup]="form" (ngSubmit)="submit()" class="stack task-form">
   <label>
     <span>Title</span>
-    <input type="text" formControlName="title" placeholder="Write a clear task title" />
+    <input type="text" formControlName="title" placeholder="Write a clear task title" maxlength="120" />
     @if (form.controls.title.touched && form.controls.title.invalid) {
-      <small>Title must be 3-120 characters.</small>
+      <small>{{ titleError() }}</small>
     }
   </label>
 
   <label>
     <span>Description</span>
-    <textarea rows="4" formControlName="description" placeholder="Add context, acceptance criteria, or notes"></textarea>
+    <textarea
+      rows="4"
+      formControlName="description"
+      placeholder="Add context, acceptance criteria, or notes"
+      maxlength="1000"
+    ></textarea>
     @if (form.controls.description.touched && form.controls.description.invalid) {
-      <small>Description is too long.</small>
+      <small>{{ descriptionError() }}</small>
     }
   </label>
 
@@ -58,6 +63,9 @@
             </div>
           }
         </div>
+        @if (form.controls.assignedTo.touched && form.controls.assignedTo.invalid) {
+          <small>{{ assigneeError() }}</small>
+        }
       </label>
     }
   </div>
