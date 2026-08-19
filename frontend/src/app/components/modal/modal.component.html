@@ -1,0 +1,22 @@
+<div class="modal-backdrop" role="presentation" (click)="closed.emit()">
+  <section
+    class="modal-panel"
+    [class.modal-sm]="size === 'sm'"
+    [class.modal-lg]="size === 'lg'"
+    role="dialog"
+    aria-modal="true"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="modal-head">
+      <div>
+        @if (eyebrow) {
+          <p class="eyebrow">{{ eyebrow }}</p>
+        }
+        <h2>{{ title }}</h2>
+      </div>
+      <button type="button" class="ghost icon-button" aria-label="Close modal" (click)="closed.emit()">×</button>
+    </header>
+
+    <ng-content />
+  </section>
+</div>

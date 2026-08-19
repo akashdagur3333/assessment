@@ -1,0 +1,63 @@
+<div class="task-panel">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">Tasks</p>
+      <h2>Current workload</h2>
+    </div>
+    <div class="task-toolbar">
+      <input type="search" [value]="searchTerm" placeholder="Search tasks" (input)="updateSearch($event)" />
+      <div class="segmented compact">
+        @for (status of statuses; track status) {
+          <button type="button" [class.active]="filterStatus === status" (click)="filterChanged.emit(status)">
+            {{ status === 'all' ? 'All' : status }}
+          </button>
+        }
+      </div>
+      @if (canCreateTask) {
+        <button type="button" class="primary" (click)="createRequested.emit()">Add task</button>
+      }
+    </div>
+  </div>
+
+  <div class="task-list">
+    @for (task of tasks; track trackByTaskId($index, task)) {
+      <article class="task-card" [class.done]="task.status === 'completed'">
+        <div>
+          <div class="task-title-row">
+            <h3>{{ task.title }}</h3>
+            <span class="status" [class.completed]="task.status === 'completed'">{{ task.status }}</span>
+          </div>
+          <p>{{ task.description || 'No description added.' }}</p>
+          <div class="meta">
+            <span>Created by {{ task.createdBy.username }}</span>
+            <span>Assigned to {{ task.assignedTo.username }}</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="soft" (click)="statusToggled.emit(task)">
+            {{ task.status === 'completed' ? 'Reopen' : 'Complete' }}
+          </button>
+          <button type="button" class="soft" (click)="editRequested.emit(task)">Edit</button>
+          <button type="button" class="danger" (click)="deleteRequested.emit(task)">Delete</button>
+        </div>
+      </article>
+    } @empty {
+      <div class="empty-state">
+        <h3>No tasks found</h3>
+        <p>Create a task or change the filter.</p>
+      </div>
+    }
+  </div>
+
+  <div class="pagination">
+    <span>{{ pagination.total }} task{{ pagination.total === 1 ? '' : 's' }} • page {{ pagination.page }} of {{ pagination.totalPages }}</span>
+    <div>
+      <button type="button" class="soft small" [disabled]="!pagination.hasPrevPage" (click)="pageChanged.emit(pagination.page - 1)">
+        Previous
+      </button>
+      <button type="button" class="soft small" [disabled]="!pagination.hasNextPage" (click)="pageChanged.emit(pagination.page + 1)">
+        Next
+      </button>
+    </div>
+  </div>
+</div>

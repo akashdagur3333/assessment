@@ -1,0 +1,104 @@
+<article class="people-panel">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">People</p>
+      <h2>{{ currentUser.role === 'Manager' ? 'All users' : 'My team' }}</h2>
+    </div>
+  </div>
+
+  <input type="search" [value]="searchTerm" placeholder="Search people" (input)="updateSearch($event)" />
+
+  <div class="people-list">
+    @for (user of users; track trackByUserId($index, user)) {
+      <div class="person-row">
+        <div>
+          <strong>{{ user.username }}</strong>
+          <span>{{ user.email }}</span>
+        </div>
+        @if (currentUser.role === 'Manager') {
+          <select [value]="user.role" (change)="changeRole(user, $event)">
+            @for (role of roles; track role) {
+              <option [value]="role" [selected]="role === user.role">{{ role }}</option>
+            }
+          </select>
+          <div class="searchable-select" [class.disabled]="user.role !== 'Employee'">
+            <button type="button" class="select-trigger" [disabled]="user.role !== 'Employee'" (click)="toggleTeamLeadDropdown(user)">
+              <span>{{ getTeamLeadLabel(user) }}</span>
+              <span aria-hidden="true">v</span>
+            </button>
+
+            @if (openTeamLeadDropdownUserId === user._id) {
+              <div class="select-menu">
+                <input
+                  type="search"
+                  [value]="teamLeadSearchTerm"
+                  placeholder="Search team leads"
+                  (input)="updateTeamLeadSearch($event)"
+                />
+
+                <button type="button" class="select-option" [class.selected]="!user.teamLead" (click)="selectTeamLead(user, null)">
+                  No lead
+                </button>
+
+                @for (lead of getTeamLeadOptions(user); track trackByUserId($index, lead)) {
+                  <button
+                    type="button"
+                    class="select-option"
+                    [class.selected]="lead._id === user.teamLead?._id"
+                    (click)="selectTeamLead(user, lead._id)"
+                  >
+                    <strong>{{ lead.username }}</strong>
+                    <span>{{ lead.email }}</span>
+                  </button>
+                } @empty {
+                  <div class="select-empty">No team leads found</div>
+                }
+
+                <div class="pagination compact-pagination">
+                  <span>{{ teamLeadPagination.total }} lead{{ teamLeadPagination.total === 1 ? '' : 's' }} • page {{ teamLeadPagination.page }} of {{ teamLeadPagination.totalPages }}</span>
+                  <div>
+                    <button
+                      type="button"
+                      class="soft small"
+                      [disabled]="!teamLeadPagination.hasPrevPage"
+                      (click)="teamLeadPageChanged.emit(teamLeadPagination.page - 1)"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      type="button"
+                      class="soft small"
+                      [disabled]="!teamLeadPagination.hasNextPage"
+                      (click)="teamLeadPageChanged.emit(teamLeadPagination.page + 1)"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <span class="role-chip muted">{{ user.role }}</span>
+        }
+      </div>
+    } @empty {
+      <div class="empty-state compact-empty">
+        <h3>No people found</h3>
+        <p>Try another search.</p>
+      </div>
+    }
+  </div>
+
+  <div class="pagination">
+    <span>{{ pagination.total }} user{{ pagination.total === 1 ? '' : 's' }} • page {{ pagination.page }} of {{ pagination.totalPages }}</span>
+    <div>
+      <button type="button" class="soft small" [disabled]="!pagination.hasPrevPage" (click)="pageChanged.emit(pagination.page - 1)">
+        Previous
+      </button>
+      <button type="button" class="soft small" [disabled]="!pagination.hasNextPage" (click)="pageChanged.emit(pagination.page + 1)">
+        Next
+      </button>
+    </div>
+  </div>
+</article>

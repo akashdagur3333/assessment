@@ -1,0 +1,84 @@
+<section class="workspace">
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Task Management</p>
+      <h1>{{ currentUser.username }}</h1>
+      <span class="role-chip">{{ currentUser.role }}</span>
+    </div>
+    <button type="button" class="ghost" (click)="logout()">Logout</button>
+  </header>
+
+  <app-task-stats [stats]="taskStats" />
+
+  <section class="board">
+    <app-task-list
+      [tasks]="tasks"
+      [filterStatus]="filterStatus"
+      [canCreateTask]="true"
+      [searchTerm]="taskSearchTerm"
+      [pagination]="taskPagination"
+      (createRequested)="openCreateTaskModal()"
+      (filterChanged)="setFilter($event)"
+      (searchChanged)="setTaskSearch($event)"
+      (pageChanged)="changeTaskPage($event)"
+      (editRequested)="editTask($event)"
+      (statusToggled)="toggleTaskStatus($event)"
+      (deleteRequested)="confirmDeleteTask($event)"
+    />
+  </section>
+
+  @if (canViewPeople) {
+    <section class="people-grid">
+      <app-people-panel
+        [currentUser]="currentUser"
+        [users]="users"
+        [teamLeads]="teamLeads"
+        [searchTerm]="peopleSearchTerm"
+        [teamLeadSearchTerm]="teamLeadSearchTerm"
+        [pagination]="peoplePagination"
+        [teamLeadPagination]="teamLeadPagination"
+        (roleChanged)="updateUserRole($event)"
+        (teamLeadChanged)="updateUserTeamLead($event)"
+        (searchChanged)="setPeopleSearch($event)"
+        (pageChanged)="changePeoplePage($event)"
+        (teamLeadSearchChanged)="setTeamLeadSearch($event)"
+        (teamLeadPageChanged)="changeTeamLeadPage($event)"
+      />
+
+      @if (currentUser.role === 'Manager') {
+        <app-manager-lead-summary [summaries]="teamLeadSummaries" />
+      }
+    </section>
+  }
+
+  @if (showTaskModal) {
+    <app-modal
+      [eyebrow]="editingTask ? 'Edit Task' : 'New Task'"
+      [title]="editingTask ? 'Update details' : 'Create task'"
+      size="lg"
+      (closed)="clearEditingTask()"
+    >
+      <app-task-form
+        [currentUser]="currentUser"
+        [task]="editingTask"
+        [assignableUsers]="assignableUsers"
+        [assigneeSearchTerm]="assigneeSearchTerm"
+        [canReassignTasks]="canReassignTasks"
+        [loading]="loading"
+        (saved)="saveTask($event)"
+        (cancelled)="clearEditingTask()"
+        (assigneeSearchChanged)="setAssigneeSearch($event)"
+      />
+    </app-modal>
+  }
+
+  @if (taskToDelete) {
+    <app-modal eyebrow="Delete Task" title="Confirm delete" size="sm" (closed)="cancelDeleteTask()">
+      <p class="modal-copy">Delete "{{ taskToDelete.title }}"? This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button type="button" class="ghost" (click)="cancelDeleteTask()">Cancel</button>
+        <button type="button" class="danger" [disabled]="loading" (click)="deleteTask()">Delete task</button>
+      </div>
+    </app-modal>
+  }
+</section>

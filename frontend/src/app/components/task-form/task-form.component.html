@@ -1,0 +1,69 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="stack task-form">
+  <label>
+    <span>Title</span>
+    <input type="text" formControlName="title" placeholder="Write a clear task title" />
+    @if (form.controls.title.touched && form.controls.title.invalid) {
+      <small>Title must be 3-120 characters.</small>
+    }
+  </label>
+
+  <label>
+    <span>Description</span>
+    <textarea rows="4" formControlName="description" placeholder="Add context, acceptance criteria, or notes"></textarea>
+    @if (form.controls.description.touched && form.controls.description.invalid) {
+      <small>Description is too long.</small>
+    }
+  </label>
+
+  <div class="form-grid">
+    <label>
+      <span>Status</span>
+      <select formControlName="status">
+        <option value="pending">Pending</option>
+        <option value="completed">Completed</option>
+      </select>
+    </label>
+
+    @if (canReassignTasks) {
+      <label>
+        <span>Assigned to</span>
+        <div class="searchable-select">
+          <button type="button" class="select-trigger" (click)="toggleAssigneeDropdown()">
+            <span>{{ getAssigneeLabel() }}</span>
+            <span aria-hidden="true">v</span>
+          </button>
+
+          @if (openAssigneeDropdown) {
+            <div class="select-menu">
+              <input
+                type="search"
+                [value]="assigneeSearchTerm"
+                placeholder="Search assignee"
+                (input)="updateAssigneeSearch($event)"
+              />
+
+              @for (user of getAssigneeOptions(); track trackByUserId($index, user)) {
+                <button
+                  type="button"
+                  class="select-option"
+                  [class.selected]="user._id === form.controls.assignedTo.value"
+                  (click)="selectAssignee(user._id)"
+                >
+                  <strong>{{ user.username }} - {{ user.role }}</strong>
+                  <span>{{ user.email }}</span>
+                </button>
+              } @empty {
+                <div class="select-empty">No assignees found</div>
+              }
+            </div>
+          }
+        </div>
+      </label>
+    }
+  </div>
+
+  <div class="modal-actions">
+    <button type="button" class="ghost" (click)="cancel()">Cancel</button>
+    <button class="primary" type="submit" [disabled]="loading">{{ task ? 'Save changes' : 'Add task' }}</button>
+  </div>
+</form>

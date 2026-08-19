@@ -1,0 +1,64 @@
+<section class="auth-layout">
+  <div class="auth-copy">
+    <p class="eyebrow">MEAN Task Manager</p>
+    <h1>Plan, assign, and finish team work.</h1>
+    <p class="lede">A role-aware task workspace for managers, team leads, and employees.</p>
+  </div>
+
+  <div class="auth-panel">
+    <div class="segmented">
+      <button type="button" [class.active]="authMode === 'login'" (click)="switchMode('login')">Login</button>
+      <button type="button" [class.active]="authMode === 'register'" (click)="switchMode('register')">Register</button>
+    </div>
+
+    @if (authMode === 'login') {
+      <form [formGroup]="loginForm" (ngSubmit)="login()" class="stack">
+        <label>
+          <span>Email</span>
+          <input type="email" formControlName="email" autocomplete="email" placeholder="you@example.com" />
+          @if (loginForm.controls.email.touched && loginForm.controls.email.invalid) {
+            <small>Enter a valid email.</small>
+          }
+        </label>
+
+        <label>
+          <span>Password</span>
+          <input type="password" formControlName="password" autocomplete="current-password" placeholder="Enter your password" />
+          @if (loginForm.controls.password.touched && loginForm.controls.password.invalid) {
+            <small>Password is required.</small>
+          }
+        </label>
+
+        <button class="primary" type="submit" [disabled]="loading">Login</button>
+      </form>
+    } @else {
+      <form [formGroup]="registerForm" (ngSubmit)="register()" class="stack">
+        <label>
+          <span>Username</span>
+          <input type="text" formControlName="username" autocomplete="name" placeholder="Akash Chaudhary" />
+          @if (registerForm.controls.username.touched && registerForm.controls.username.invalid) {
+            <small>Username must be at least 3 characters.</small>
+          }
+        </label>
+
+        <label>
+          <span>Email</span>
+          <input type="email" formControlName="email" autocomplete="email" placeholder="you@example.com" />
+          @if (registerForm.controls.email.touched && registerForm.controls.email.invalid) {
+            <small>Enter a valid email.</small>
+          }
+        </label>
+
+        <label>
+          <span>Password</span>
+          <input type="password" formControlName="password" autocomplete="new-password" placeholder="Minimum 6 characters" />
+          @if (registerForm.controls.password.touched && registerForm.controls.password.invalid) {
+            <small>Password must be at least 6 characters.</small>
+          }
+        </label>
+
+        <button class="primary" type="submit" [disabled]="loading">Create account</button>
+      </form>
+    }
+  </div>
+</section>

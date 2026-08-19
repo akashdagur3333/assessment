@@ -1,0 +1,26 @@
+<article class="people-panel">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">Team Leads</p>
+      <h2>Lead tasks</h2>
+    </div>
+  </div>
+
+  <div class="people-list">
+    @for (lead of summaries; track trackByLeadId($index, lead)) {
+      <div class="lead-summary">
+        <div>
+          <strong>{{ lead.username }}</strong>
+          <span>{{ lead.tasks.length }} assigned tasks</span>
+        </div>
+        <div class="mini-tasks">
+          @for (task of lead.tasks.slice(0, 3); track trackByTaskId($index, task)) {
+            <span>{{ task.title }}</span>
+          } @empty {
+            <span>No assigned tasks</span>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</article>
