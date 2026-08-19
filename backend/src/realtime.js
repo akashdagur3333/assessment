@@ -1,11 +1,12 @@
 const jwt = require('jsonwebtoken');
 const { Server } = require('socket.io');
+const { corsOptions } = require('./config/cors');
 const User = require('./models/User');
 
 function createRealtimeServer(httpServer) {
   const io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_ORIGIN || 'http://localhost:4200',
+      origin: corsOptions.origin,
       methods: ['GET', 'POST']
     }
   });

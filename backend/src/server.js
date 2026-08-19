@@ -7,6 +7,7 @@ const connectDb = require('./config/db');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/users.routes');
 const taskRoutes = require('./routes/tasks.routes');
+const { corsOptions } = require('./config/cors');
 const { createRealtimeServer } = require('./realtime');
 const { notFound, errorHandler } = require('./middleware/error');
 
@@ -17,7 +18,7 @@ const io = createRealtimeServer(server);
 
 app.set('io', io);
 
-app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:4200' }));
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.get('/api/health', (req, res) => {
